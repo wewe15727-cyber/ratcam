@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>🐭 Rat Cam Live</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            color: #eee; 
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 115, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 15px; 
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            position: relative;
+            z-index: 1;
+        }
+        .header h1 { 
+            font-size: 28px; 
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header .subtitle { 
+            font-size: 14px; 
+            opacity: 0.9;
+        }
+        .rat-emoji {
+            font-size: 40px;
+            animation: bounce 2s infinite;
+            display: inline-block;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            position: relative;
+            z-index: 1;
+        }
+        .stream-container {
+            background: #000; 
+            border-radius: 16px; 
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+            position: relative;
+            margin-bottom: 20px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .stream-container img {
+            width: 100%; 
+            display: block;
+        }
+        .stream-container .placeholder {
+            color: #666;
+            font-size: 18px;
+            text-align: center;
+        }
+        .live-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 2;
+        }
+        .live-badge.offline {
+            background: rgba(100, 100, 100, 0.9);
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .controls {
+            display: flex; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            align-items: center;
+            gap: 15px; 
+            padding: 15px;
+            background: rgba(22, 33, 62, 0.6);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 14px 28px; 
+            border: none; 
+            border-radius: 12px;
+            font-size: 16px; 
+            font-weight: 800;
+            cursor: pointer; 
+            transition: all 0.3s;
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            text-transform: uppercase;
+        }
+        .btn:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+        .btn-picture { 
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white; 
+        }
+        .btn-led { 
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            color: white; 
+        }
+        .status-bar {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            padding: 12px 20px; 
+            background: rgba(22, 33, 62, 0.8);
+            border-radius: 12px; 
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .status-text { font-weight: 700; }
+        .rat-facts {
+            background: rgba(22, 33, 62, 0.8);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        .rat-facts h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #38ef7d;
+        }
+        .fact {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            border-left: 3px solid #38ef7d;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.3);
+            font-size: 13px;
+        }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 22px; }
+            .controls { flex-direction: column; }
+            .btn { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="rat-emoji">🐭</div>
+        <h1>Rat Cam Live</h1>
+        <div class="subtitle">Watch your little friends from anywhere! 🐾</div>
+    </div>
+    
+    <div class="container">
+        <div class="status-bar">
+            <span class="status-text" id="status">🔌 Connecting...</span>
+            <span id="clock"></span>
+        </div>
+        
+        <div class="stream-container">
+            <div class="live-badge" id="liveBadge">
+                <span class="live-dot"></span>
+                <span id="liveText">CONNECTING</span>
+            </div>
+            <img id="stream" style="display:none;" />
+            <div class="placeholder" id="placeholder">
+                🐭 Waiting for camera...<br>
+                <small>Make sure your ESP32-CAM is powered on</small>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-picture" onclick="takePicture()">📷 Take Picture</button>
+            <button class="btn btn-led" id="ledBtn" onclick="toggleLED()">💡 Flash: OFF</button>
+        </div>
+        
+        <div class="rat-facts">
+            <h3>🧠 Did you know?</h3>
+            <div class="fact">🧬 Rats are super smart — they can learn 100+ commands!</div>
+            <div class="fact">😂 Rats laugh when you tickle them!</div>
+            <div class="fact">💕 Rats are super social and get lonely without friends</div>
+        </div>
+        
+        <div class="footer">
+            Made with ❤️ for your rats 🐭 | Powered by Cloud Relay
+        </div>
+    </div>
+    
+    <script>
+        let ws = null;
+        let ledOn = false;
+        let frameCount = 0;
+        
+        // Update clock
+        setInterval(function() {
+            document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+        }, 1000);
+        
+        // Connect to WebSocket
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws?type=viewer`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                console.log('Connected to relay server');
+            };
+            
+            ws.onmessage = function(event) {
+                // Check if it's a JSON control message or binary image data
+                if (typeof event.data === 'string') {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'camera-online') {
+                        onCameraOnline();
+                    } else if (msg.type === 'camera-offline') {
+                        onCameraOffline();
+                    }
+                } else {
+                    // Binary image data
+                    onImageFrame(event.data);
+                }
+            };
+            
+            ws.onclose = function() {
+                console.log('Disconnected, reconnecting...');
+                document.getElementById('status').textContent = '🔌 Reconnecting...';
+                setTimeout(connect, 3000);
+            };
+            
+            ws.onerror = function(err) {
+                console.error('WebSocket error:', err);
+            };
+        }
+        
+        function onCameraOnline() {
+            document.getElementById('status').textContent = '✅ Camera online!';
+            document.getElementById('liveText').textContent = 'LIVE';
+            document.getElementById('liveBadge').classList.remove('offline');
+            document.getElementById('placeholder').style.display = 'none';
+        }
+        
+        function onCameraOffline() {
+            document.getElementById('status').textContent = '⚠️ Camera offline';
+            document.getElementById('liveText').textContent = 'OFFLINE';
+            document.getElementById('liveBadge').classList.add('offline');
+            document.getElementById('stream').style.display = 'none';
+            document.getElementById('placeholder').style.display = 'block';
+        }
+        
+        function onImageFrame(data) {
+            const blob = new Blob([data]);
+            const url = URL.createObjectURL(blob);
+            const stream = document.getElementById('stream');
+            stream.src = url;
+            stream.style.display = 'block';
+            document.getElementById('placeholder').style.display = 'none';
+            frameCount++;
+            
+            // Clean up old URL after image loads
+            stream.onload = function() {
+                URL.revokeObjectURL(url);
+            };
+            
+            // Update status after first frame
+            if (frameCount === 1) {
+                onCameraOnline();
+            }
+        }
+        
+        function takePicture() {
+            // Send command to ESP32 to take a picture
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'command', command: 'capture' }));
+            }
+        }
+        
+        function toggleLED() {
+            ledOn = !ledOn;
+            document.getElementById('ledBtn').textContent = `💡 Flash: ${ledOn ? 'ON' : 'OFF'}`;
+            
+            // Send LED command to ESP32
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'command', command: 'led', on: ledOn }));
+            }
+        }
+        
+        // Start connection
+        connect();
+    </script>
+</body>
+</html>

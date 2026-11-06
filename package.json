@@ -1,0 +1,13 @@
+{
+  "name": "ratcam-cloud-relay",
+  "version": "1.0.0",
+  "description": "WebSocket relay server for ESP32-CAM Rat Cam - pushes video from ESP32 to browser",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  }
+}
